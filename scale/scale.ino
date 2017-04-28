@@ -45,7 +45,7 @@ void connect_to_mqtt() {
   Serial.println(clientId);
   Serial.print("Auth: ");
   Serial.print(authMethod);
-  Serial.print(" : ");
+  Serial.print(": ");
   Serial.println(token);
   
   while (!client.connect(clientId, authMethod, token)) {
@@ -54,6 +54,21 @@ void connect_to_mqtt() {
   }
 
   Serial.println(); 
+}
+
+void send_weight(double weight) {
+    String payload = "{\"d\":{\"weight\":";
+    payload += weight;
+    payload += "}}";
+    
+    Serial.print("Sending payload: ");
+    Serial.println(payload);
+    
+    if (client.publish(topic, (char*) payload.c_str())) {
+      Serial.println("Publish ok");
+    } else {
+      Serial.println("Publish failed");
+    }
 }
 
 // -------- END MQTT -----------//
@@ -106,13 +121,13 @@ void loop() {
   if (!client.connected()) {
     connect_to_mqtt();
   }
-  else {
-    Serial.println("asdasd");
-  }
   
-  double w = get_weight();
+  double weight = get_weight();
   Serial.print("Weight (g): ");
   Serial.println(w);
-  
-  delay(500);
+
+  send_weight(w);
+
+  while(Serial.available() < 2){}
+  Serial.readString();
 }
