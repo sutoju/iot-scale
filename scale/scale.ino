@@ -1,3 +1,9 @@
+// Scale settings
+// offset = ADC value when there is no weight on scale
+// factor = ADC resolution is 10-bit -> max weight/1024
+unsigned int scale_offset = 201;
+double scale_factor = 11.9;
+
 void setup() {
   Serial.begin(115200);
   Serial.println();
@@ -23,9 +29,6 @@ unsigned int read_scale() {
 }
 
 double adc2g(unsigned int value) {
-  unsigned int scale_offset = 201;
-  double scale_factor = 11.9;
-
   unsigned delta = value - scale_offset;
   Serial.print("Delta:" );
   Serial.println(delta);
