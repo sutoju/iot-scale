@@ -1,0 +1,3 @@
+// WIFI's ssid and password
+const char* ssid = "";
+const char* passwd = "";

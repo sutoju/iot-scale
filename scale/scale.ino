@@ -1,14 +1,36 @@
+#include <ESP8266WiFi.h>
+#include "settings.h"
+
 // Scale settings
 // offset = ADC value when there is no weight on scale
 // factor = ADC resolution is 10-bit -> max weight/1024
 unsigned int scale_offset = 201;
 double scale_factor = 11.9;
 
+void connect_to_wifi() {
+  Serial.print("Connecting to ");
+  Serial.print(ssid);
+  Serial.print(" with password ");
+  Serial.println(passwd);
+
+  // These variables are defined in settings.h
+  WiFi.begin(ssid, passwd);
+  while(WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.print("\nIP: ");
+  Serial.println(WiFi.localIP());
+}
+
 void setup() {
   Serial.begin(115200);
   Serial.println();
 
   pinMode(A0, INPUT);
+
+  connect_to_wifi();
 }
 
 unsigned int read_adc() {
