@@ -1,3 +1,9 @@
-// WIFI's ssid and password
-const char* ssid = "";
-const char* passwd = "";
+// Wifi settings
+#define WIFI_SSID ""
+#define WIFI_PASSWD ""
+
+//MQTT settings
+#define MQTT_ORG ""
+#define MQTT_DEVICE_TYPE ""
+#define MQTT_DEVICE_ID ""
+#define MQTT_TOKEN ""

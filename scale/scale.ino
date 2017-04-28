@@ -1,20 +1,15 @@
 #include <ESP8266WiFi.h>
+#include <PubSubClient.h>
 #include "settings.h"
-
-// Scale settings
-// offset = ADC value when there is no weight on scale
-// factor = ADC resolution is 10-bit -> max weight/1024
-unsigned int scale_offset = 201;
-double scale_factor = 11.9;
 
 void connect_to_wifi() {
   Serial.print("Connecting to ");
-  Serial.print(ssid);
+  Serial.print(WIFI_SSID);
   Serial.print(" with password ");
-  Serial.println(passwd);
+  Serial.println(WIFI_PASSWD);
 
   // These variables are defined in settings.h
-  WiFi.begin(ssid, passwd);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWD);
   while(WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
@@ -32,6 +27,44 @@ void setup() {
 
   connect_to_wifi();
 }
+
+// -------- MQTT ----------------//
+char server[] = MQTT_ORG ".messaging.internetofthings.ibmcloud.com";
+char topic[] = "iot-2/evt/status/fmt/json";
+char authMethod[] = "use-token-auth";
+char token[] = MQTT_TOKEN;
+char clientId[] = "d:" MQTT_ORG ":" MQTT_DEVICE_TYPE ":" MQTT_DEVICE_ID;
+
+WiFiClient wifiClient;
+PubSubClient client(server, 1883, NULL, wifiClient);
+
+void connect_to_mqtt() {
+  Serial.print("Connecting MQTT client to ");
+  Serial.println(server);
+  Serial.print("ClientId: ");
+  Serial.println(clientId);
+  Serial.print("Auth: ");
+  Serial.print(authMethod);
+  Serial.print(" : ");
+  Serial.println(token);
+  
+  while (!client.connect(clientId, authMethod, token)) {
+    Serial.print(".");
+    delay(500);
+  }
+
+  Serial.println(); 
+}
+
+// -------- END MQTT -----------//
+
+// ----------- SCALE -----------//
+
+// Scale settings
+// offset = ADC value when there is no weight on scale
+// factor = ADC resolution is 10-bit -> max weight/1024
+unsigned int scale_offset = 201;
+double scale_factor = 11.9;
 
 unsigned int read_adc() {
   return (unsigned int) analogRead(A0);
@@ -67,7 +100,16 @@ double get_weight() {
   return weight;
 }
 
+// -------- END SCALE -------- //
+
 void loop() {
+  if (!client.connected()) {
+    connect_to_mqtt();
+  }
+  else {
+    Serial.println("asdasd");
+  }
+  
   double w = get_weight();
   Serial.print("Weight (g): ");
   Serial.println(w);
