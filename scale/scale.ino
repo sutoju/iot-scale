@@ -118,16 +118,34 @@ double get_weight() {
 // -------- END SCALE -------- //
 
 void loop() {
+  static unsigned int old_weight = 0;
+  static unsigned int trigger_diff = 50;
+  
   if (!client.connected()) {
     connect_to_mqtt();
   }
   
   double weight = get_weight();
   Serial.print("Weight (g): ");
-  Serial.println(w);
+  Serial.println(weight);
 
-  send_weight(w);
+  unsigned delta = abs(weight - old_weight);
+  if (delta > trigger_diff) {
+    unsigned int final_weight = 0;
+    
+    delay(1500);
+    for(unsigned int i = 0; i < 10; ++i) {
+      final_weight += get_weight();
+    }
+    final_weight /= 10;
 
-  while(Serial.available() < 2){}
-  Serial.readString();
+    delta = abs(final_weight - old_weight);
+    if (delta > trigger_diff) {
+      Serial.println("Send weight");
+      send_weight(final_weight);
+      old_weight = final_weight;
+    }
+  }
+
+  delay(1000);
 }
