@@ -129,7 +129,7 @@ void loop() {
   Serial.print("Weight (g): ");
   Serial.println(weight);
 
-  unsigned delta = abs(weight - old_weight);
+  unsigned int delta = abs(weight - old_weight);
   if (delta > trigger_diff) {
     unsigned int final_weight = 0;
     
