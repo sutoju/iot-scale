@@ -1,6 +1,8 @@
 # ESP8266 IoT Scale 
 A smart scale for following the amount of food waste produced from a household. Created @ Junction Tokyo 2017 with <3.
 
+![scale](https://github.com/sutoju/iot-scale/blob/master/hw/scale.png?raw=true)
+
 ## Hardware
 
 ```
