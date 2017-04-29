@@ -56,9 +56,11 @@ void connect_to_mqtt() {
   Serial.println(); 
 }
 
-void send_weight(double weight) {
+void send_weight(double weight, double diff) {
     String payload = "{\"d\":{\"weight\":";
     payload += weight;
+    payload += ",\"difference\":";
+    payload += diff;
     payload += "}}";
     
     Serial.print("Sending payload: ");
@@ -118,7 +120,7 @@ double get_weight() {
 // -------- END SCALE -------- //
 
 void loop() {
-  static unsigned int old_weight = 0;
+  static double old_weight = 0;
   static unsigned int trigger_diff = 50;
   
   if (!client.connected()) {
@@ -142,7 +144,7 @@ void loop() {
     delta = abs(final_weight - old_weight);
     if (delta > trigger_diff) {
       Serial.println("Send weight");
-      send_weight(final_weight);
+      send_weight(final_weight, final_weight - old_weight);
       old_weight = final_weight;
     }
   }
