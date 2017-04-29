@@ -2,6 +2,20 @@
 #include <PubSubClient.h>
 #include "settings.h"
 
+// -------- LED -----------------//
+#define LED_YELLOW D1
+#define LED_RED D3
+#define LED_GREEN D5
+
+void blink(int pin) {
+  digitalWrite(pin, LOW);
+  delay(150);
+  digitalWrite(pin, HIGH);
+  delay(150);
+  digitalWrite(pin, LOW);
+}
+// -------- END LED -------------//
+
 void connect_to_wifi() {
   Serial.print("Connecting to ");
   Serial.print(WIFI_SSID);
@@ -11,7 +25,7 @@ void connect_to_wifi() {
   // These variables are defined in settings.h
   WiFi.begin(WIFI_SSID, WIFI_PASSWD);
   while(WiFi.status() != WL_CONNECTED) {
-    delay(500);
+    blink(LED_YELLOW);
     Serial.print(".");
   }
 
@@ -41,7 +55,7 @@ void connect_to_mqtt() {
   
   while (!client.connect(clientId, authMethod, token)) {
     Serial.print(".");
-    delay(500);
+    blink(LED_YELLOW);
   }
 
   Serial.println(); 
@@ -59,8 +73,21 @@ void send_weight(double weight, double diff) {
     
     if (client.publish(topic, (char*) payload.c_str())) {
       Serial.println("Publish ok");
+      blink(LED_YELLOW);
     } else {
       Serial.println("Publish failed");
+      blink(LED_RED);
+
+      if (!client.connected()) {
+        connect_to_mqtt();
+      }     
+      if (client.publish(topic, (char*) payload.c_str())) {
+        Serial.println("Publish ok");
+        blink(LED_YELLOW);
+      } else {
+        Serial.println("Publish failed");
+        blink(LED_RED);
+      }
     }
 }
 
@@ -71,7 +98,7 @@ void send_weight(double weight, double diff) {
 // Scale settings
 // offset = ADC value when there is no weight on scale
 // factor = ADC resolution is 10-bit -> max weight/1024
-unsigned int scale_offset = 201;
+unsigned int scale_offset = 0;
 double scale_factor = 11.9;
 
 unsigned int read_adc() {
@@ -115,10 +142,24 @@ void setup() {
   Serial.println();
 
   pinMode(A0, INPUT);
-
+  
+  pinMode(LED_YELLOW, OUTPUT);
+  pinMode(LED_RED, OUTPUT);
+  pinMode(LED_GREEN, OUTPUT);
+  digitalWrite(LED_YELLOW, LOW);
+  digitalWrite(LED_RED, LOW);
+  digitalWrite(LED_GREEN, LOW);
+  
   connect_to_wifi();
 
-  scale_offset = read_adc() - 1;
+  blink(LED_GREEN);
+
+  for(int i = 0; i < 5; ++i) {
+    scale_offset += read_adc();
+  }
+  scale_offset /= 5;
+  scale_offset -= 1;
+  
   Serial.print("Set scale offset to ");
   Serial.println(scale_offset);
 }
@@ -140,8 +181,8 @@ void loop() {
     if (delta > trigger_diff) {
       double final_weight = 0;
       
-      delay(1500);
-      for(unsigned int i = 0; i < 10; ++i) {
+      delay(1000);
+      for(unsigned int i = 0; i < 5; ++i) {
         final_weight += get_weight();
       }
       final_weight /= 10;
