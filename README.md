@@ -24,7 +24,7 @@ A smart scale for following the amount of food waste produced from a household. 
     +-------------+
 ```
 
-The full schematics is [here](https://github.com/sutoju/iot-scale/blob/master/hw/schema.pdf).
+The full schematics is [here](https://github.com/sutoju/iot-scale/blob/master/hw/schematics.pdf).
 
 ## License
 
