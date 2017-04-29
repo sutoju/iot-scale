@@ -185,7 +185,7 @@ void loop() {
       for(unsigned int i = 0; i < 5; ++i) {
         final_weight += get_weight();
       }
-      final_weight /= 10;
+      final_weight /= 5;
   
       delta = abs(final_weight - old_weight);
       if (delta > trigger_diff) {
