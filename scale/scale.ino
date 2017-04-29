@@ -19,15 +19,6 @@ void connect_to_wifi() {
   Serial.println(WiFi.localIP());
 }
 
-void setup() {
-  Serial.begin(115200);
-  Serial.println();
-
-  pinMode(A0, INPUT);
-
-  connect_to_wifi();
-}
-
 // -------- MQTT ----------------//
 char server[] = MQTT_ORG ".messaging.internetofthings.ibmcloud.com";
 char topic[] = "iot-2/evt/status/fmt/json";
@@ -57,11 +48,11 @@ void connect_to_mqtt() {
 }
 
 void send_weight(double weight, double diff) {
-    String payload = "{\"d\":{\"weight\":";
+    String payload = "{\"d\":{\"weight\":\"";
     payload += weight;
-    payload += ",\"difference\":";
+    payload += "\",\"difference\":\"";
     payload += diff;
-    payload += "}}";
+    payload += "\"}}";
     
     Serial.print("Sending payload: ");
     Serial.println(payload);
@@ -87,7 +78,7 @@ unsigned int read_adc() {
   return (unsigned int) analogRead(A0);
 }
 
-unsigned int read_scale() {
+int read_scale() {
   unsigned int v = 0;
   unsigned int n = 20;
   
@@ -101,7 +92,7 @@ unsigned int read_scale() {
 }
 
 double adc2g(unsigned int value) {
-  unsigned delta = value - scale_offset;
+  int delta = value - scale_offset;
   Serial.print("Delta:" );
   Serial.println(delta);
 
@@ -119,6 +110,19 @@ double get_weight() {
 
 // -------- END SCALE -------- //
 
+void setup() {
+  Serial.begin(115200);
+  Serial.println();
+
+  pinMode(A0, INPUT);
+
+  connect_to_wifi();
+
+  scale_offset = read_adc() - 1;
+  Serial.print("Set scale offset to ");
+  Serial.println(scale_offset);
+}
+
 void loop() {
   static double old_weight = 0;
   static unsigned int trigger_diff = 50;
@@ -130,22 +134,24 @@ void loop() {
   double weight = get_weight();
   Serial.print("Weight (g): ");
   Serial.println(weight);
-
-  unsigned int delta = abs(weight - old_weight);
-  if (delta > trigger_diff) {
-    unsigned int final_weight = 0;
     
-    delay(1500);
-    for(unsigned int i = 0; i < 10; ++i) {
-      final_weight += get_weight();
-    }
-    final_weight /= 10;
-
-    delta = abs(final_weight - old_weight);
+  if (weight >= 0.0 && weight <= 10000.0) {
+    int delta = abs(weight - old_weight);
     if (delta > trigger_diff) {
-      Serial.println("Send weight");
-      send_weight(final_weight, final_weight - old_weight);
-      old_weight = final_weight;
+      double final_weight = 0;
+      
+      delay(1500);
+      for(unsigned int i = 0; i < 10; ++i) {
+        final_weight += get_weight();
+      }
+      final_weight /= 10;
+  
+      delta = abs(final_weight - old_weight);
+      if (delta > trigger_diff) {
+        Serial.println("Send weight");
+        send_weight(final_weight, final_weight - old_weight);
+        old_weight = final_weight;
+      }
     }
   }
 
